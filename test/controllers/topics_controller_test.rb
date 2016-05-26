@@ -89,6 +89,36 @@ class TopicsControllerTest < ActionController::TestCase
     assert_not_nil Topic.last.locale, 'Did not capture locale when user created new topic'
   end
 
+  test 'a user should see the option to attach files if cloudinary configured' do
+
+    # Make sure cloudinary cloud name is setup
+    AppSettings['cloudinary.cloud_name'] = "test-cloud"
+    AppSettings['cloudinary.api_key'] = "some-key"
+    AppSettings['cloudinary.api_secret'] = "test-cloud"
+
+    # Get new topics page
+    get :new, locale: :en
+    assert_response :success
+
+    assert_select("input#topic_screenshots", true)
+
+  end
+
+  test 'a user should not see the option to attach files if cloudinary is not configured' do
+
+    # Make sure cloudinary cloud name is setup
+    AppSettings['cloudinary.cloud_name'] = ""
+    AppSettings['cloudinary.api_key'] = ""
+    AppSettings['cloudinary.api_secret'] = ""
+
+    # Get new topics page
+    get :new, locale: :en
+    assert_response :success
+
+    assert_select("input#topic_screenshots", false)
+
+  end
+
   # A user who is signed in should be able to create a new private or public topic
   test 'a signed in user should be able to create a new private topic' do
     sign_in users(:user)
@@ -102,8 +132,8 @@ class TopicsControllerTest < ActionController::TestCase
     assert_difference 'Post.count', 1, 'A post should have been created' do
       post :create, topic: { user: { name: 'a user', email: 'anon@test.com' }, name: 'some new public topic', body: 'some body text', forum_id: 1, private: true }, post: { body: 'this is the body' }, locale: :en
     end
-
-    assert_redirected_to ticket_path(assigns(:topic)), 'Did not redirect to private topic view'
+    
+    assert_redirected_to topic_thanks_path, 'Did not redirect to thanks view'
   end
 
   # A user who is registered, but not signed in currently should be able to create a new private
@@ -119,7 +149,7 @@ class TopicsControllerTest < ActionController::TestCase
       end
     end
 
-    assert_redirected_to ticket_path(assigns(:topic)), 'Did not redirect to private topic view'
+    assert_redirected_to topic_thanks_path, 'Did not redirect to thanks view'
   end
 
   test 'a signed in user should not see trashed topics in a public forum' do
@@ -144,5 +174,4 @@ class TopicsControllerTest < ActionController::TestCase
       xhr :post, :up_vote, { id: 5 , locale: :en }
     end
   end
-
 end

@@ -202,10 +202,10 @@ en:
   view_online: "View this online:"
 
   # settings
-  settings: "Settings: General"
+  settings: "Settings"
   general: "General"
   design: "Design"
-  i18n: "International"
+  international: "International"
   widget: "Embeddable Widget"
 
   activerecord:

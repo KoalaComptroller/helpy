@@ -20,7 +20,7 @@ class Post < ActiveRecord::Base
   belongs_to :topic, counter_cache: true, touch: true
   belongs_to :user, touch: true
   has_many :votes, :as => :voteable
-  has_attachments :screenshots, accept: [:jpg, :png, :gif]
+  has_attachments :screenshots, accept: [:jpg, :png, :gif, :pdf]
 
   validates :body, presence: true, length: { maximum: 10_000 }
   validates :kind, presence: true
@@ -47,7 +47,7 @@ class Post < ActiveRecord::Base
     unless status == 'trash'
       logger.info('private message, update waiting on cache')
       status = self.topic.current_status
-      if self.user && self.user.admin?
+      if self.user && self.user.is_agent?
         logger.info('waiting on user')
         waiting_on = "user"
         status = "open"
@@ -71,9 +71,10 @@ class Post < ActiveRecord::Base
   end
 
   # Assign the parent topic if not assigned and this is a reply by admin
+  # or agents
   def assign_on_reply
     if self.topic.assigned_user_id.nil?
-      self.topic.assigned_user_id = self.user.admin? ? self.user_id : nil
+      self.topic.assigned_user_id = self.user.is_agent? ? self.user_id : nil
     end
   end
 
